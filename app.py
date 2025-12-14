@@ -11,7 +11,7 @@ from database import (
 )
 
 app = Flask(__name__)
-app.secret_key = "devkey"  # ❌ intentionally weak
+app.secret_key = "devkey"  # intentionally weak
 
 
 @app.before_request
@@ -64,7 +64,7 @@ def register():
         flash("Username and password required.")
         return redirect(url_for("register"))
 
-    ok = create_user(username, password, role="user")  # ❌ plaintext passwords
+    ok = create_user(username, password, role="user")  # plaintext passwords
     if not ok:
         flash("Username already taken.")
         return redirect(url_for("register"))
@@ -94,7 +94,7 @@ def notes():
     if request.method == "POST":
         content = request.form.get("content", "")
         if content.strip():
-            create_note(user_id, content)  # ❌ will enable XSS testing later
+            create_note(user_id, content)  # will enable XSS testing later
         return redirect(url_for("notes"))
 
     rows = get_notes_for_user(user_id)
@@ -103,7 +103,7 @@ def notes():
 
 @app.route("/admin")
 def admin():
-    # ❌ INTENTIONALLY BROKEN ACCESS CONTROL:
+    # INTENTIONALLY BROKEN ACCESS CONTROL:
     # Anyone who is logged in (or even not logged in) can view admin data.
     users = get_all_users_and_note_counts()
     return render_template("admin.html", users=users)
@@ -111,8 +111,7 @@ def admin():
 @app.route("/xss-collect")
 def xss_collect():
     """
-    ❌ Intentionally insecure endpoint used to demonstrate XSS data exfiltration.
-    Never do this in a real app.
+    Intentionally insecure endpoint used to demonstrate XSS data exfiltration.
     """
     payload = request.args.get("d", "")
     print(f"[XSS-COLLECT] Received: {payload}")
@@ -121,4 +120,4 @@ def xss_collect():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)  # ❌ intentionally unsafe
+    app.run(debug=True)  # intentionally unsafe

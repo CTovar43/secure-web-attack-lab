@@ -61,7 +61,7 @@ def ensure_admin_seed():
     """
     Create an admin user if it doesn't exist.
     Username: admin
-    Password: adminpass   (❌ intentionally weak)
+    Password: adminpass   ( intentionally weak)
     """
     conn = get_db()
     cur = conn.cursor()
@@ -78,7 +78,7 @@ def ensure_admin_seed():
 
 def find_user_insecure(username: str, password: str):
     """
-    ❌ Intentionally vulnerable to SQL Injection.
+    Intentionally vulnerable to SQL Injection.
     """
     conn = get_db()
     cur = conn.cursor()
@@ -114,7 +114,7 @@ def get_notes_for_user(user_id: int):
 
 def get_all_users_and_note_counts():
     """
-    Used by /admin page (we'll intentionally expose it later).
+    Used by /admin page.
     """
     conn = get_db()
     cur = conn.cursor()
