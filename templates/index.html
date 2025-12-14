@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Web Lab</title>
+</head>
+<body>
+
+<h1>Secure Web Attack Lab</h1>
+
+{% if user %}
+    <p>Logged in as <strong>{{ user }}</strong></p>
+    <a href="/logout">Logout</a>
+{% else %}
+    <form method="POST" action="/login">
+        <input name="username" placeholder="Username">
+        <input name="password" type="password" placeholder="Password">
+        <button type="submit">Login</button>
+    </form>
+{% endif %}
+
+</body>
+</html>
