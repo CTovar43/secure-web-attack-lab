@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin</title>
+</head>
+<body>
+  <h2>Admin Dashboard (Intentionally Broken Access Control)</h2>
+
+  <table border="1" cellpadding="6">
+    <tr>
+      <th>User ID</th>
+      <th>Username</th>
+      <th>Role</th>
+      <th>Note Count</th>
+    </tr>
+    {% for u in users %}
+      <tr>
+        <td>{{ u["id"] }}</td>
+        <td>{{ u["username"] }}</td>
+        <td>{{ u["role"] }}</td>
+        <td>{{ u["note_count"] }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <p><a href="/">Home</a></p>
+</body>
+</html>

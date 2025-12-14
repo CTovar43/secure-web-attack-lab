@@ -1,16 +1,30 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
-from database import init_db, create_user, find_user_insecure
+from database import (
+    init_db,
+    ensure_admin_seed,
+    create_user,
+    find_user_insecure,
+    create_note,
+    get_notes_for_user,
+    get_all_users_and_note_counts,
+    get_user_id_by_username,
+)
 
 app = Flask(__name__)
-
-# ❌ Intentionally weak secret key (we'll fix later)
-app.secret_key = "devkey"
+app.secret_key = "devkey"  # ❌ intentionally weak
 
 
 @app.before_request
-def _init():
-    # Safe to call repeatedly; table creation uses IF NOT EXISTS
+def _setup():
     init_db()
+    ensure_admin_seed()  # creates admin/adminpass if missing
+
+
+def require_login():
+    if "user" not in session:
+        flash("Please log in first.")
+        return False
+    return True
 
 
 @app.route("/")
@@ -50,8 +64,7 @@ def register():
         flash("Username and password required.")
         return redirect(url_for("register"))
 
-    # ❌ Plaintext password storage (intentional)
-    ok = create_user(username, password, role="user")
+    ok = create_user(username, password, role="user")  # ❌ plaintext passwords
     if not ok:
         flash("Username already taken.")
         return redirect(url_for("register"))
@@ -66,6 +79,35 @@ def logout():
     return redirect(url_for("index"))
 
 
+@app.route("/notes", methods=["GET", "POST"])
+def notes():
+    if not require_login():
+        return redirect(url_for("login"))
+
+    username = session["user"]
+    user_id = get_user_id_by_username(username)
+    if user_id is None:
+        session.clear()
+        flash("Session user not found. Please log in again.")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        content = request.form.get("content", "")
+        if content.strip():
+            create_note(user_id, content)  # ❌ will enable XSS testing later
+        return redirect(url_for("notes"))
+
+    rows = get_notes_for_user(user_id)
+    return render_template("notes.html", user=username, notes=rows)
+
+
+@app.route("/admin")
+def admin():
+    # ❌ INTENTIONALLY BROKEN ACCESS CONTROL:
+    # Anyone who is logged in (or even not logged in) can view admin data.
+    users = get_all_users_and_note_counts()
+    return render_template("admin.html", users=users)
+
+
 if __name__ == "__main__":
-    # ❌ debug=True is intentionally unsafe (we'll fix later)
-    app.run(debug=True)
+    app.run(debug=True)  # ❌ intentionally unsafe

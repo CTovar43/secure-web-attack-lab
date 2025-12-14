@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Notes</title>
+</head>
+<body>
+  <h2>Notes for {{ user }}</h2>
+
+  <form method="POST" action="/notes">
+    <textarea name="content" rows="4" cols="60" placeholder="Write a note..."></textarea><br>
+    <button type="submit">Save Note</button>
+  </form>
+
+  <hr>
+
+  <h3>Saved Notes</h3>
+  <ul>
+    {% for n in notes %}
+      <!-- ❌ We'll intentionally make XSS easier in Day 4 by changing rendering.
+           For now, Jinja auto-escapes, which is good. -->
+      <li>
+        <strong>{{ n["created_at"] }}</strong> — {{ n["content"] }}
+      </li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="/">Home</a></p>
+</body>
+</html>

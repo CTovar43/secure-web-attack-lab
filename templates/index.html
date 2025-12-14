@@ -18,9 +18,14 @@
 
   {% if user %}
     <p>Logged in as <strong>{{ user }}</strong> (role: {{ role }})</p>
-    <p><a href="/logout">Logout</a></p>
+    <ul>
+      <li><a href="/notes">My Notes</a></li>
+      <li><a href="/admin">Admin (intentionally broken)</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
   {% else %}
     <p><a href="/login">Login</a> | <a href="/register">Register</a></p>
+    <p><a href="/admin">Admin (intentionally exposed)</a></p>
   {% endif %}
 </body>
 </html>
