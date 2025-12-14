@@ -108,6 +108,17 @@ def admin():
     users = get_all_users_and_note_counts()
     return render_template("admin.html", users=users)
 
+@app.route("/xss-collect")
+def xss_collect():
+    """
+    ❌ Intentionally insecure endpoint used to demonstrate XSS data exfiltration.
+    Never do this in a real app.
+    """
+    payload = request.args.get("d", "")
+    print(f"[XSS-COLLECT] Received: {payload}")
+    return "ok"
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)  # ❌ intentionally unsafe

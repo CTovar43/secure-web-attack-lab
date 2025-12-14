@@ -19,7 +19,7 @@
       <!-- ❌ We'll intentionally make XSS easier in Day 4 by changing rendering.
            For now, Jinja auto-escapes, which is good. -->
       <li>
-        <strong>{{ n["created_at"] }}</strong> — {{ n["content"] }}
+        <strong>{{ n["created_at"] }}</strong> — {{ n["content"] | safe }}
       </li>
     {% endfor %}
   </ul>
