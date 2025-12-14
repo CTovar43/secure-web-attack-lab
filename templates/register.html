@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+</head>
+<body>
+  <h2>Register</h2>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for m in messages %}
+          <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="/register">
+    <input name="username" placeholder="Username" />
+    <input name="password" type="password" placeholder="Password" />
+    <button type="submit">Create Account</button>
+  </form>
+
+  <p><a href="/">Home</a></p>
+</body>
+</html>

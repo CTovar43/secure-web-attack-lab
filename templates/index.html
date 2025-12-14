@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Secure Web Lab</title>
+  <title>Secure Web Lab</title>
 </head>
 <body>
+  <h1>Secure Web Attack Lab</h1>
 
-<h1>Secure Web Attack Lab</h1>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for m in messages %}
+          <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
 
-{% if user %}
-    <p>Logged in as <strong>{{ user }}</strong></p>
-    <a href="/logout">Logout</a>
-{% else %}
-    <form method="POST" action="/login">
-        <input name="username" placeholder="Username">
-        <input name="password" type="password" placeholder="Password">
-        <button type="submit">Login</button>
-    </form>
-{% endif %}
-
+  {% if user %}
+    <p>Logged in as <strong>{{ user }}</strong> (role: {{ role }})</p>
+    <p><a href="/logout">Logout</a></p>
+  {% else %}
+    <p><a href="/login">Login</a> | <a href="/register">Register</a></p>
+  {% endif %}
 </body>
 </html>
