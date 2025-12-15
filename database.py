@@ -1,4 +1,5 @@
 import sqlite3
+import bcrypt
 
 DB_NAME = "app.db"
 
@@ -37,32 +38,41 @@ def init_db():
     conn.commit()
     conn.close()
 
+# ------ PASSWORD SECURITY ------
+
+def hash_password(plain_password: str) -> str:
+    return bcrypt.hashpw(
+        plain_password.encode(),
+        bcrypt.gensalt()
+    ).decode()
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(
+        plain_password.encode(),
+        hashed_password.encode()
+    )
+
+# ------ USER MANAGEMENT ------
 
 def create_user(username: str, password: str, role: str = "user") -> bool:
     try:
         conn = get_db()
         cur = conn.cursor()
+        hashed = hash_password(password)
         cur.execute(
             "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-            (username, password, role)
+            (username, hashed, role)
         )
         conn.commit()
         return True
     except sqlite3.IntegrityError:
         return False
     finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+        conn.close()
+
 
 
 def ensure_admin_seed():
-    """
-    Create an admin user if it doesn't exist.
-    Username: admin
-    Password: adminpass   ( intentionally weak)
-    """
     conn = get_db()
     cur = conn.cursor()
     cur.execute("SELECT id FROM users WHERE username = ?", ("admin",))
@@ -70,24 +80,34 @@ def ensure_admin_seed():
     if not exists:
         cur.execute(
             "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-            ("admin", "adminpass", "admin")
+            ("admin", hash_password("adminpass"), "admin")
         )
         conn.commit()
     conn.close()
 
 
-def find_user_insecure(username: str, password: str):
+def find_user_secure(username: str, password: str):
     """
-    Intentionally vulnerable to SQL Injection.
+    Secure login with parameterized queries + bcrypt
     """
     conn = get_db()
     cur = conn.cursor()
-    query = f"SELECT id, username, role FROM users WHERE username = '{username}' AND password = '{password}'"
-    cur.execute(query)
+    cur.execute(
+        "SELECT id, username, password, role FROM users WHERE username = ?",
+        (username,)
+    )
     row = cur.fetchone()
     conn.close()
-    return row
 
+    if row and verify_password(password, row["password"]):
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "role": row["role"]
+        }
+    return None
+
+# ------ NOTES ------
 
 def create_note(user_id: int, content: str):
     conn = get_db()
@@ -123,7 +143,6 @@ def get_all_users_and_note_counts():
         FROM users u
         LEFT JOIN notes n ON n.user_id = u.id
         GROUP BY u.id, u.username, u.role
-        ORDER BY u.id ASC
     """)
     rows = cur.fetchall()
     conn.close()

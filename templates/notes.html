@@ -19,7 +19,7 @@
       <!-- Intentionally make XSS easier by changing rendering.
            For now, Jinja auto-escapes. -->
       <li>
-        <strong>{{ n["created_at"] }}</strong> — {{ n["content"] | safe }}
+        <strong>{{ n["created_at"] }}</strong> — {{ n["content"] }}
       </li>
     {% endfor %}
   </ul>

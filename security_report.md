@@ -32,3 +32,10 @@ A security assessment was conducted against a custom-built Flask web application
 
 ### Detailed Findings
 (See individual exploit reports in `/exploits`)
+
+### Remediation Summary
+All identified vulnerabilities were remediated using industry best practices:
+- SQL injection fixed via parameterized queries
+- Passwords secured with bcrypt hashing
+- Stored XSS mitigated through output encoding
+- Admin access restricted via role-based access control (RBAC)

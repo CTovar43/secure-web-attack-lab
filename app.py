@@ -3,7 +3,7 @@ from database import (
     init_db,
     ensure_admin_seed,
     create_user,
-    find_user_insecure,
+    find_user_secure,
     create_note,
     get_notes_for_user,
     get_all_users_and_note_counts,
@@ -11,13 +11,13 @@ from database import (
 )
 
 app = Flask(__name__)
-app.secret_key = "devkey"  # intentionally weak
+app.secret_key = "devkey"  # will harden later
 
 
 @app.before_request
-def _setup():
+def setup():
     init_db()
-    ensure_admin_seed()  # creates admin/adminpass if missing
+    ensure_admin_seed()
 
 
 def require_login():
@@ -27,11 +27,20 @@ def require_login():
     return True
 
 
+def require_admin():
+    if "user" not in session or session.get("role") != "admin":
+        flash("Admin access required.")
+        return False
+    return True
+
+
 @app.route("/")
 def index():
-    user = session.get("user")
-    role = session.get("role")
-    return render_template("index.html", user=user, role=role)
+    return render_template(
+        "index.html",
+        user=session.get("user"),
+        role=session.get("role"),
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -42,13 +51,13 @@ def login():
     username = request.form.get("username", "")
     password = request.form.get("password", "")
 
-    row = find_user_insecure(username, password)
-    if row:
-        session["user"] = row["username"]
-        session["role"] = row["role"]
+    user = find_user_secure(username, password)
+    if user:
+        session["user"] = user["username"]
+        session["role"] = user["role"]
         return redirect(url_for("index"))
 
-    flash("Invalid username or password.")
+    flash("Invalid credentials.")
     return redirect(url_for("login"))
 
 
@@ -64,13 +73,38 @@ def register():
         flash("Username and password required.")
         return redirect(url_for("register"))
 
-    ok = create_user(username, password, role="user")  # plaintext passwords
-    if not ok:
-        flash("Username already taken.")
+    if not create_user(username, password):
+        flash("Username already exists.")
         return redirect(url_for("register"))
 
     flash("Account created. Please log in.")
     return redirect(url_for("login"))
+
+
+@app.route("/notes", methods=["GET", "POST"])
+def notes():
+    if not require_login():
+        return redirect(url_for("login"))
+
+    user_id = get_user_id_by_username(session["user"])
+
+    if request.method == "POST":
+        content = request.form.get("content", "")
+        if content.strip():
+            create_note(user_id, content)
+        return redirect(url_for("notes"))
+
+    notes = get_notes_for_user(user_id)
+    return render_template("notes.html", user=session["user"], notes=notes)
+
+
+@app.route("/admin")
+def admin():
+    if not require_admin():
+        return redirect(url_for("index"))
+
+    users = get_all_users_and_note_counts()
+    return render_template("admin.html", users=users)
 
 
 @app.route("/logout")
@@ -79,45 +113,5 @@ def logout():
     return redirect(url_for("index"))
 
 
-@app.route("/notes", methods=["GET", "POST"])
-def notes():
-    if not require_login():
-        return redirect(url_for("login"))
-
-    username = session["user"]
-    user_id = get_user_id_by_username(username)
-    if user_id is None:
-        session.clear()
-        flash("Session user not found. Please log in again.")
-        return redirect(url_for("login"))
-
-    if request.method == "POST":
-        content = request.form.get("content", "")
-        if content.strip():
-            create_note(user_id, content)  # will enable XSS testing later
-        return redirect(url_for("notes"))
-
-    rows = get_notes_for_user(user_id)
-    return render_template("notes.html", user=username, notes=rows)
-
-
-@app.route("/admin")
-def admin():
-    # INTENTIONALLY BROKEN ACCESS CONTROL:
-    # Anyone who is logged in (or even not logged in) can view admin data.
-    users = get_all_users_and_note_counts()
-    return render_template("admin.html", users=users)
-
-@app.route("/xss-collect")
-def xss_collect():
-    """
-    Intentionally insecure endpoint used to demonstrate XSS data exfiltration.
-    """
-    payload = request.args.get("d", "")
-    print(f"[XSS-COLLECT] Received: {payload}")
-    return "ok"
-
-
-
 if __name__ == "__main__":
-    app.run(debug=True)  # intentionally unsafe
+    app.run(debug=True)
