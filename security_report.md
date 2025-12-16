@@ -40,7 +40,6 @@ All identified vulnerabilities were remediated using industry best practices:
 - Stored XSS mitigated through output encoding
 - Admin access restricted via role-based access control (RBAC)
 
-```markdown
 ### Defense-in-Depth Hardening
 - Hardened session cookies (HttpOnly, SameSite; Secure in production)
 - Added security headers (CSP, X-Frame-Options, nosniff, referrer policy)
